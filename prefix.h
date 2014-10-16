@@ -20,7 +20,7 @@ struct Prefix {
     friend class Prefix;
     typedef Prefix<N-1> reduce_type;
 private:
-    typedef std::array<std::string, N> array_type;
+    typedef std::array<key_type, N> array_type;
     array_type arr;
     void Shift() {
         std::copy_n(arr.begin()+1, N-1, arr.begin());
@@ -39,10 +39,10 @@ public:
         arr.back() = key;
     }
 };
-template <typename T>
-class Prefix<0,T> {
-    
-public:
+template <typename key_type>
+struct Prefix<0,key_type> {
+    typedef std::array<key_type, 0> array_type;
+    array_type arr;
     
 };
 
