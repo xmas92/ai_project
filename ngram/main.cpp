@@ -23,9 +23,11 @@ int main(int argc, const char * argv[]) {
     std::cout << p2.First() << std::endl;
     
     NGram<3> _3gram;
-    std::istringstream iss ("Lets test and see if we can make a simple 3 gram.");
+    std::istringstream iss ("Lets test and see if we can make a simple 3 gram. Can you find a simple 3 gram?");
     
     iss >> _3gram;
+    
+    std::cout << _3gram;
     
     return 0;
 }
