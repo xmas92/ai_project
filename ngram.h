@@ -26,7 +26,7 @@ typename = typename std::enable_if<std::is_integral<total_type>::value, total_ty
 typename = typename std::enable_if<std::is_convertible<count_type, total_type>::value>::type
 >
 class NGram {
-    template<unsigned,typename>
+    template<unsigned,typename,typename,typename,typename,typename,typename>
     friend class NGram;
     typedef NGram<N> self;
     typedef NGram<N-1> nextgram_type;
@@ -45,6 +45,34 @@ class NGram {
         map[word].first.AddPrefix(prefix.Reduce());
     }
 public:
+    void PrintNGram(std::ostream &os, unsigned depth) {
+        assert(depth <= N);
+        if (depth == 0) return;
+        if (depth == 1)
+            for (auto & p : map)
+                os << p.first << " : " << p.second.second << std::endl;
+        else
+            for (auto & p : map)
+                p.second.first.PrintNGram(os, depth-1, p.first + " ");
+    }
+    void PrintNGram(std::ostream &os, unsigned depth, std::string prefix) {
+        assert(depth <= N);
+        if (depth == 0) return;
+        if (depth == 1)
+            for (auto & p : map)
+                os << prefix << p.first << " : " << p.second.second << std::endl;
+        else
+            for (auto & p : map)
+                p.second.first.PrintNGram(os, depth-1, prefix + p.first + " ");
+        
+    }
+    friend std::ostream &operator<<(std::ostream &os, NGram<N> &ngram) {
+        for(unsigned n = 1; n <= N; n++) {
+            os << n << "-gram!" << std::endl;
+            ngram.PrintNGram(os,n);
+        }
+        return os;
+    }
     friend std::istream &operator>>(std::istream &is, NGram<N> &ngram) {
         prefix_type prefix;
         key_type nextKey;
@@ -52,7 +80,7 @@ public:
             prefix.Next(nextKey);
             ngram.AddPrefix(prefix);
         }
-        while (prefix.First().empty()) {
+        while (!prefix.First().empty()) {
             ngram.AddPrefix(prefix);
             prefix.Next(key_type());
         }
@@ -70,11 +98,11 @@ class NGram<0, key_type,count_type,total_type> {
     typedef std::unordered_map<key_type, uint32_t> map_type;
     
     count_type count;
-    
+public:
+    void PrintNGram(std::ostream &os, unsigned depth, std::string prefix) {}
     void AddPrefix(prefix_type prefix) {
         assert((++count) != std::numeric_limits<count_type>::max());
     }
-public:
     
 };
 
