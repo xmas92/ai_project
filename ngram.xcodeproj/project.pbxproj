@@ -25,6 +25,8 @@
 /* Begin PBXFileReference section */
 		6B64EC1419F013F8004A2EEE /* ngram */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ngram; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B64EC1719F013F8004A2EEE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6B64EC2219F01F63004A2EEE /* ngram.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = ngram.h; sourceTree = "<group>"; };
+		6B64EC2319F025CF004A2EEE /* prefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prefix.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +43,8 @@
 		6B64EC0B19F013F8004A2EEE = {
 			isa = PBXGroup;
 			children = (
+				6B64EC2319F025CF004A2EEE /* prefix.h */,
+				6B64EC2219F01F63004A2EEE /* ngram.h */,
 				6B64EC1619F013F8004A2EEE /* ngram */,
 				6B64EC1519F013F8004A2EEE /* Products */,
 			);
@@ -232,6 +236,7 @@
 				6B64EC1D19F013F8004A2EEE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
