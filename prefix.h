@@ -14,13 +14,12 @@
 /*
  Keep track of N
 */
-template <unsigned N>
+template <unsigned N, typename key_type = std::string>
 struct Prefix {
-    template<unsigned T>
+    template <unsigned,typename>
     friend class Prefix;
-private:
     typedef Prefix<N-1> reduce_type;
-    typedef std::string key_type;
+private:
     typedef std::array<std::string, N> array_type;
     array_type arr;
     void Shift() {
@@ -40,8 +39,8 @@ public:
         arr.back() = key;
     }
 };
-template <>
-class Prefix<0> {
+template <typename T>
+class Prefix<0,T> {
     
 public:
     
