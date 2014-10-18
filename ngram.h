@@ -81,8 +81,8 @@ public:
             ngram.AddPrefix(prefix);
         }
         while (!prefix.First().empty()) {
-            ngram.AddPrefix(prefix);
             prefix.Next(key_type());
+            ngram.AddPrefix(prefix);
         }
         return is;
     }
