@@ -17,6 +17,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <cstdint>
 #include "prefix.h"
 
 template <
