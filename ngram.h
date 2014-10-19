@@ -14,6 +14,9 @@
 #include <cassert>
 #include <type_traits>
 #include <limits>
+#include <vector>
+#include <list>
+#include <algorithm>
 #include "prefix.h"
 
 template <
@@ -32,6 +35,7 @@ class NGram {
     typedef NGram<N-1> nextgram_type;
     typedef Prefix<N,key_type> prefix_type;
     typedef std::pair<nextgram_type, count_type> pair_type;
+    typedef std::pair<key_type, count_type> keycount_type;
     typedef std::unordered_map<key_type, pair_type> map_type;
     
     map_type map;
@@ -45,6 +49,37 @@ class NGram {
         map[word].first.AddPrefix(prefix.Reduce());
     }
 public:
+    std::vector<key_type> GetKeys() {
+        std::vector<key_type> r;
+        r.reserve(map.size());
+        for (auto p : map)
+            r.push_back(p.first);
+        return r;
+    }
+    std::vector<keycount_type> GetKeyCount() {
+        std::vector<keycount_type> r;
+        r.reserve(map.size());
+        for (auto p : map)
+            r.push_back(std::make_pair(p.first,p.second.second));
+        return r;
+    }
+    template<unsigned K>
+    std::array<key_type, K> TopK(std::list<key_type> given) {
+        assert(given.size() != 0);
+        if (given.size() == 1) {
+            std::array<key_type, K> r;
+            auto vec = map[given.front()].first.GetKeyCount();
+            std::sort(vec.begin(), vec.end(), [](keycount_type a, keycount_type b) {
+                          return a.second > b.second;
+            });
+            std::transform(vec.begin(), vec.begin()+std::min<unsigned>(K, static_cast<unsigned>(vec.size())), r.begin(), [](const keycount_type& p) { return p.first; });
+            return r;
+        } else {
+            given.pop_front();
+            return map[given.front()].first.template TopK<K>(given);
+        }
+    }
+    
     void PrintNGram(std::ostream &os, unsigned depth) {
         assert(depth <= N);
         if (depth == 0) return;
@@ -95,6 +130,7 @@ typename total_type
 >
 class NGram<0, key_type,count_type,total_type> {
     typedef Prefix<0,key_type> prefix_type;
+    typedef std::pair<key_type, count_type> keycount_type;
     typedef std::unordered_map<key_type, uint32_t> map_type;
     
     count_type count;
@@ -102,6 +138,13 @@ public:
     void PrintNGram(std::ostream &os, unsigned depth, std::string prefix) {}
     void AddPrefix(prefix_type prefix) {
         assert((++count) != std::numeric_limits<count_type>::max());
+    }
+    template<unsigned K>
+    std::array<key_type, K> TopK(std::list<key_type> given) {
+        return std::array<key_type, K>();
+    }
+    std::vector<keycount_type> GetKeyCount() {
+        return std::vector<keycount_type>();
     }
     
 };
