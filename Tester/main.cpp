@@ -87,7 +87,6 @@ int main(int argc, const char * argv[]) {
     int TTGenerate = TimeToNextGenerate();
     Prefix<N-1> prefix;
     array<string, K> predicted;
-    stringstream pipe;
     //chrono::milliseconds dura( 1000 );
     //this_thread::sleep_for( dura );
     while (testcorpus >> word) {
@@ -96,8 +95,8 @@ int main(int argc, const char * argv[]) {
             TTGenerate = TimeToNextGenerate();
             topk.Generate(ngram);
         }
-        pipe << word;
-        pipe >> word;
+        istringstream iss(word);
+        iss >> ngram;
         total++;
         tkeys += word.size();
         if (find(begin(predicted),end(predicted),word) != end(predicted)) {
