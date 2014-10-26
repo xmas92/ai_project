@@ -63,7 +63,7 @@ public:
     template<unsigned N>
     void Generate(NGram<N, key_type> ngram) {
         ngram_size = N;
-        map.clear();
+        map = map_type(ngram.Total());
         for (auto k : ngram.GetKeys()) {
             std::list<key_type> l;
             l.push_front(k);
@@ -77,7 +77,7 @@ public:
     template<unsigned N>
     void GenerateK(NGram<N, key_type> ngram, std::list<key_type> l) {
         ngram_size = N;
-        map.clear();
+        map = map_type(K);
         for (auto k : ngram.TopK<K>(l)) {
             if (k.empty())
                 return;

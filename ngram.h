@@ -50,6 +50,9 @@ class NGram {
         map[word].first.AddPrefix(prefix.Reduce());
     }
 public:
+    total_type Total() {
+        return total;
+    }
     static bool CINALL;
     NGram<N-1>& NextGram(key_type k) {
         return map[k].first;
