@@ -44,6 +44,13 @@ struct Prefix<0,key_type> {
     typedef std::array<key_type, 0> array_type;
     array_type arr;
     
+    Prefix<0> Reduce() {
+        return *this;
+    }
+    
+    key_type First() {
+        return key_type();
+    }
 };
 
 #endif
