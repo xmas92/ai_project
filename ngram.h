@@ -80,8 +80,9 @@ public:
             std::transform(vec.begin(), vec.begin()+std::min<unsigned>(K, static_cast<unsigned>(vec.size())), r.begin(), [](const keycount_type& p) { return p.first; });
             return r;
         } else {
+            auto front = given.front();
             given.pop_front();
-            return map[given.front()].first.template TopK<K>(given);
+            return map[front].first.template TopK<K>(given);
         }
     }
     
