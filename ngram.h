@@ -50,6 +50,10 @@ class NGram {
         map[word].first.AddPrefix(prefix.Reduce());
     }
 public:
+    static bool CINALL;
+    NGram<N-1>& NextGram(key_type k) {
+        return map[k].first;
+    }
     std::vector<key_type> GetKeys() {
         std::vector<key_type> r;
         r.reserve(map.size());
@@ -110,15 +114,17 @@ public:
         return os;
     }
     friend std::istream &operator>>(std::istream &is, NGram<N> &ngram) {
-        prefix_type prefix;
+        static prefix_type prefix;
         key_type nextKey;
         while (is >> nextKey) {
             prefix.Next(nextKey);
             ngram.AddPrefix(prefix);
         }
-        while (!prefix.First().empty()) {
-            prefix.Next(key_type());
-            ngram.AddPrefix(prefix);
+        if (CINALL) {
+            while (!prefix.First().empty()) {
+                prefix.Next(key_type());
+                ngram.AddPrefix(prefix);
+            }
         }
         return is;
     }
@@ -136,6 +142,9 @@ class NGram<0, key_type,count_type,total_type> {
     
     count_type count;
 public:
+    NGram<0>& NextGram(key_type k) {
+        return *this;
+    }
     void PrintNGram(std::ostream &os, unsigned depth, std::string prefix) {}
     void AddPrefix(prefix_type prefix) {
         assert((++count) != std::numeric_limits<count_type>::max());
@@ -144,10 +153,17 @@ public:
     std::array<key_type, K> TopK(std::list<key_type> given) {
         return std::array<key_type, K>();
     }
+    std::vector<key_type> GetKeys() {
+        return std::vector<key_type>();
+    }
     std::vector<keycount_type> GetKeyCount() {
         return std::vector<keycount_type>();
     }
     
 };
+
+template<unsigned N,typename A,typename B,typename C,typename D,typename E,typename F>
+bool NGram<N,A,B,C,D,E,F>::CINALL = true;
+
 
 #endif
