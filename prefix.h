@@ -54,6 +54,15 @@ public:
         arr.back() = key;
     }
 };
+
+template <typename key_type>
+struct Prefix<10,key_type> {
+    template <unsigned,typename>
+    friend class Prefix;
+    typedef std::array<key_type, 10> array_type;
+    array_type arr;
+};
+
 template <typename key_type>
 struct Prefix<0,key_type> {
     typedef std::array<key_type, 0> array_type;

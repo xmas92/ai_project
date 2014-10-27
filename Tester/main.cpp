@@ -25,40 +25,8 @@ using namespace std;
 
 #define N 3
 #define K 10
-#define UNIFORMNEXT
-//#define NORMALNEXT
-//#define FIXEDNEXT
-
-#ifdef UNIFORMNEXT
-#define MINNEXT 10
-#define MAXNEXT 12
-#endif
-
-#ifdef NORMALNEXT
-#define MEANNEXT 11
-#define STDDIVNEXT 1
-#endif
-
-#ifdef FIXEDNEXT
-#define NEXT 11
-#endif
-
-
-int TimeToNextGenerate() {
-    random_device rd;
-    default_random_engine e(rd());
-#ifdef UNIFORMNEXT
-    uniform_int_distribution<int> uniform_dist(MINNEXT, MAXNEXT);
-    return uniform_dist(e);
-#endif
-#ifdef NORMALNEXT
-    normal_distribution<int> normal_dist(MEANNEXT, STDDIVNEXT);
-    return normal_dist(e);
-#endif
-#ifdef FIXEDNEXT
-    return NEXT;
-#endif
-}
+#define WPM 80
+#define WPS (WPM/60.0)
 
 int main(int argc, const char * argv[]) {
     if (argc < 3) {
@@ -74,44 +42,68 @@ int main(int argc, const char * argv[]) {
         cerr << "File could not be open:" << argv[2] <<  endl;
         return 0;
     }
+    typedef chrono::nanoseconds NS;
+    typedef chrono::duration<double, std::ratio<1>> S;
+    auto tp = chrono::high_resolution_clock::now();
     NGram<N> ngram;
     corpus >> ngram;
+    chrono::nanoseconds dur = chrono::high_resolution_clock::now() - tp;
+    cout << "Total Words: " << ngram.Total() << endl;
+    cout << "1-grams: " << ngram.NumberUniqueKeys() << endl;
+    cout << "N-Gram Build Time: " << chrono::duration_cast<S>(dur).count() << " s ("  << dur.count() << " ns)" << endl;
     NGram<N>::CINALL = false;
+    tp = chrono::high_resolution_clock::now();
     TopK<K> topk(ngram);
+    dur = chrono::high_resolution_clock::now() - tp;
+    cout << "Top-K Build Time: " << chrono::duration_cast<S>(dur).count() << " s ("  << dur.count() << " ns)" << endl;
     
-    uint64_t found = 0;
-    uint64_t total = 0;
-    uint64_t tkeys = 0;
-    uint64_t keyss = 0;
+    array<uint64_t, 2> found = {0,0};
+    uint64_t  total = 0;
+    uint64_t  tkeys = 0;
+    array<uint64_t, 2>  keyss = {0,0};
     string word;
-    int TTGenerate = TimeToNextGenerate();
     Prefix<N-1> prefix;
-    array<string, K> predicted;
+    array<array<string, K>, 2> predicted;
     //chrono::milliseconds dura( 1000 );
     //this_thread::sleep_for( dura );
+    uint64_t WordsSinceLastGen = 0;
     while (testcorpus >> word) {
-        if (TTGenerate-- == 0) {
+        if (chrono::duration_cast<S>(dur).count()*WPS < WordsSinceLastGen) {
             // Regenerate TopK
-            TTGenerate = TimeToNextGenerate();
+            WordsSinceLastGen = 0;
+            tp = chrono::high_resolution_clock::now();
             topk.Generate(ngram);
+            dur = chrono::high_resolution_clock::now() - tp;
+            cout << "Top-K Build Time: " << chrono::duration_cast<S>(dur).count() << " s ("  << dur.count() << " ns)" << endl;
         }
         istringstream iss(word);
         iss >> ngram;
         total++;
         tkeys += word.size();
-        if (find(begin(predicted),end(predicted),word) != end(predicted)) {
-            found++;
-            keyss += word.size();
+        if (find(begin(predicted[0]),end(predicted[0]),word) != end(predicted[0])) {
+            found[0]++;
+            keyss[0] += word.size();
+        } else {
+            WordsSinceLastGen++;
+        }
+        if (find(begin(predicted[1]),end(predicted[1]),word) != end(predicted[1])) {
+            found[1]++;
+            keyss[1] += word.size();
         }
         prefix.Next(word);
-        predicted = topk.GetTopK(prefix);
+        predicted[0] = topk.GetTopK(prefix);
+        predicted[1] = ngram.TopK<K>(prefix);
     }
     cout << "Total Words: " << total << endl;
-    cout << "Predicted Words: " << found << endl;
-    cout << "Hit Rate: " << found / static_cast<double>(total) << endl;
+    cout << "Predicted Words  (Top-K): " << found[0] << endl;
+    cout << "Predicted Words (N-Gram): " << found[1] << endl;
+    cout << "Hit Rate  (Top-K): " << found[0] / static_cast<double>(total) << endl;
+    cout << "Hit Rate (N-Gram): " << found[1] / static_cast<double>(total) << endl;
     cout << "Total Keys: " << tkeys << endl;
-    cout << "Saved Keys: " << keyss << endl;
-    cout << "Key SS: " << keyss / static_cast<double>(tkeys) << endl;
+    cout << "Saved Keys  (Top-K): " << keyss[0] << endl;
+    cout << "Saved Keys (N-Gram): " << keyss[1] << endl;
+    cout << "Key SS  (Top-K): " << keyss[0] / static_cast<double>(tkeys) << endl;
+    cout << "Key SS (N-Gram): " << keyss[1] / static_cast<double>(tkeys) << endl;
 
     return 0;
 }

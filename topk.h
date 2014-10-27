@@ -29,17 +29,17 @@ class TopK {
     typedef std::pair<key_type, self> map_pair_type;
     typedef std::unordered_map<key_type, self> map_type;
     
-    template <int N, typename DUMMY = void> struct Func {
+    template <unsigned N, typename DUMMY = void> struct GetTopK_s {
         static std::array<key_type, K> func(Prefix<N> prefix, self & topk) {
             if (prefix.First().empty())
-                return Func<N-1>::func(prefix.Reduce(), topk);
+                return GetTopK_s<N-1>::func(prefix.Reduce(), topk);
             if (topk.map.count(prefix.First()) == 0)
                 return std::array<key_type, K>();
-            return Func<N-1>::func(prefix.Reduce(), topk.map[prefix.First()]);
+            return GetTopK_s<N-1>::func(prefix.Reduce(), topk.map[prefix.First()]);
         }
     };
     
-    template <typename DUMMY> struct Func<1, DUMMY> {
+    template <typename DUMMY> struct GetTopK_s<1, DUMMY> {
         static std::array<key_type, K> func(Prefix<1> prefix, self & topk) {
             if (topk.map.count(prefix.First()) == 0)
                 return std::array<key_type, K>();
@@ -47,6 +47,24 @@ class TopK {
             auto & t = topk.map[prefix.First()].map;
             std::transform(t.begin(), t.end(), r.begin(), [](const map_pair_type& p) { return p.first; });
             return r;
+        }
+    };
+    
+    template <unsigned NP, unsigned NG, typename DUMMY = void> struct GenerateK_s {
+        static void func(NGram<NG, key_type>& ngram, Prefix<NP> prefix, self & topk) {
+            topk.ngram_size = NG;
+            topk.map = map_type(K);
+            for (auto k : ngram.TopK<K>(prefix)) {
+                if (k.empty())
+                    return;
+                GenerateK_s<NP+1, NG>::func(ngram, prefix.Expand(k), topk.map[k]);
+            }
+        }
+    };
+    
+    template <unsigned NG, typename DUMMY> struct GenerateK_s<10, NG, DUMMY> {
+        static void func(NGram<NG, key_type>& ngram, Prefix<10> prefix, self & topk) {
+            return;
         }
     };
     
@@ -61,29 +79,17 @@ public:
         Generate(ngram);
     }
     template<unsigned N>
-    void Generate(NGram<N, key_type> ngram) {
+    std::array<key_type, K> GetTopK(Prefix<N> prefix) {
+        return GetTopK_s<N>::func(prefix, *this);
+    }
+    template<unsigned N>
+    void Generate(NGram<N, key_type>& ngram) {
         ngram_size = N;
         map = map_type(ngram.NumberUniqueKeys());
+        Prefix<1> prefix;
         for (auto k : ngram.GetKeys()) {
-            std::list<key_type> l;
-            l.push_front(k);
-            map[k].GenerateK(ngram, l);
-        }
-    }
-    template<unsigned N>
-    std::array<key_type, K> GetTopK(Prefix<N> prefix) {
-        return Func<N>::func(prefix, *this);
-    }
-    template<unsigned N>
-    void GenerateK(NGram<N, key_type> ngram, std::list<key_type> l) {
-        ngram_size = N;
-        map = map_type(K);
-        for (auto k : ngram.TopK<K>(l)) {
-            if (k.empty())
-                return;
-            l.push_back(k);
-            map[k].GenerateK(ngram, l);
-            l.pop_back();
+            prefix.Last() = k;
+            GenerateK_s<1, N>::func(ngram, prefix, map[k]);
         }
     }
     friend std::ostream &operator<<(std::ostream &os, TopK<K> &topk) {

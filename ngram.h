@@ -40,7 +40,29 @@ class NGram {
     typedef std::unordered_map<key_type, pair_type> map_type;
     
     map_type map;
-    total_type total;
+    total_type total = 0;
+    
+    
+    template <unsigned NP, unsigned K, typename DUMMY = void> struct TopK_s {
+        static std::array<key_type, K> func(Prefix<NP> prefix, self & ngram) {
+            if (prefix.First().empty())
+                return TopK_s<NP-1, K>::func(prefix.Reduce(), ngram);
+            return ngram.map[prefix.First()].first.template TopK<K, NP-1>(prefix.Reduce());
+        }
+    };
+    template <unsigned K, typename DUMMY> struct TopK_s<1, K, DUMMY> {
+        static std::array<key_type, K> func(Prefix<1> prefix, self & ngram) {
+            if (prefix.First().empty())
+                return std::array<key_type, K>();
+            std::array<key_type, K> r;
+            auto vec = ngram.map[prefix.First()].first.GetKeyCount();
+            std::sort(vec.begin(), vec.end(), [](keycount_type a, keycount_type b) {
+                return a.second > b.second;
+            });
+            std::transform(vec.begin(), vec.begin()+std::min<unsigned>(K, static_cast<unsigned>(vec.size())), r.begin(), [](const keycount_type& p) { return p.first; });
+            return r;
+        }
+    };
     
     void AddPrefix(prefix_type prefix) {
         key_type word = prefix.First();
@@ -52,6 +74,9 @@ class NGram {
 public:
     total_type Total() {
         return total;
+    }
+    count_type NumberUniqueKeys() {
+        return static_cast<count_type>(map.size());
     }
     static bool CINALL;
     NGram<N-1>& NextGram(key_type k) {
@@ -71,22 +96,9 @@ public:
             r.push_back(std::make_pair(p.first,p.second.second));
         return r;
     }
-    template<unsigned K>
-    std::array<key_type, K> TopK(std::list<key_type> given) {
-        assert(given.size() != 0);
-        if (given.size() == 1) {
-            std::array<key_type, K> r;
-            auto vec = map[given.front()].first.GetKeyCount();
-            std::sort(vec.begin(), vec.end(), [](keycount_type a, keycount_type b) {
-                          return a.second > b.second;
-            });
-            std::transform(vec.begin(), vec.begin()+std::min<unsigned>(K, static_cast<unsigned>(vec.size())), r.begin(), [](const keycount_type& p) { return p.first; });
-            return r;
-        } else {
-            auto front = given.front();
-            given.pop_front();
-            return map[front].first.template TopK<K>(given);
-        }
+    template<unsigned K, unsigned NP>
+    std::array<key_type, K> TopK(Prefix<NP> prefix) {
+        return TopK_s<NP, K>::func(prefix, *this);
     }
     
     void PrintNGram(std::ostream &os, unsigned depth) {
@@ -153,8 +165,8 @@ public:
     void AddPrefix(prefix_type prefix) {
         assert((++count) != std::numeric_limits<count_type>::max());
     }
-    template<unsigned K>
-    std::array<key_type, K> TopK(std::list<key_type> given) {
+    template<unsigned K, unsigned N>
+    std::array<key_type, K> TopK(Prefix<N> prefix) {
         return std::array<key_type, K>();
     }
     std::vector<key_type> GetKeys() {
