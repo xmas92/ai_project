@@ -94,6 +94,9 @@ int main(int argc, const char * argv[]) {
         predicted[0] = topk.GetTopK(prefix);
         predicted[1] = ngram.TopK<K>(prefix);
     }
+    cout << "# Elements  (Top-K): " << topk.Size() << endl;
+    cout << "# Elements (N-Gram): " << ngram.Size() << endl;
+    cout << "# Element Ratio: " << topk.Size() / static_cast<double>(ngram.Size()) << endl;
     cout << "Total Words: " << total << endl;
     cout << "Predicted Words  (Top-K): " << found[0] << endl;
     cout << "Predicted Words (N-Gram): " << found[1] << endl;

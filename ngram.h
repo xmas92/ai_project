@@ -78,6 +78,12 @@ public:
     count_type NumberUniqueKeys() {
         return static_cast<count_type>(map.size());
     }
+    total_type Size() {
+        total_type size = NumberUniqueKeys();
+        for (auto p : map)
+            size += p.second.first.Size();
+        return size;
+    }
     static bool CINALL;
     NGram<N-1>& NextGram(key_type k) {
         return map[k].first;
@@ -160,6 +166,9 @@ class NGram<0, key_type,count_type,total_type> {
 public:
     NGram<0>& NextGram(key_type k) {
         return *this;
+    }
+    total_type Size() {
+        return 0;
     }
     void PrintNGram(std::ostream &os, unsigned depth, std::string prefix) {}
     void AddPrefix(prefix_type prefix) {

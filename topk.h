@@ -74,6 +74,13 @@ public:
     TopK() {
         
     }
+    uint64_t Size() {
+        uint64_t size = static_cast<uint64_t>(map.size());
+        for (auto p : map) {
+            size += p.second.Size();
+        }
+        return size;
+    }
     template<unsigned N>
     TopK(NGram<N, key_type>& ngram) {
         Generate(ngram);
