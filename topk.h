@@ -57,13 +57,13 @@ public:
         
     }
     template<unsigned N>
-    TopK(NGram<N, key_type> ngram) {
+    TopK(NGram<N, key_type>& ngram) {
         Generate(ngram);
     }
     template<unsigned N>
     void Generate(NGram<N, key_type> ngram) {
         ngram_size = N;
-        map = map_type(ngram.Total());
+        map = map_type(ngram.NumberUniqueKeys());
         for (auto k : ngram.GetKeys()) {
             std::list<key_type> l;
             l.push_front(k);

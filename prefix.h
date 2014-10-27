@@ -19,6 +19,7 @@ struct Prefix {
     template <unsigned,typename>
     friend class Prefix;
     typedef Prefix<N-1> reduce_type;
+    typedef Prefix<N+1> expand_type;
 private:
     typedef std::array<key_type, N> array_type;
     array_type arr;
@@ -31,8 +32,22 @@ public:
         std::copy_n(arr.begin()+1, N-1, r.arr.begin());
         return r;
     }
+    expand_type Expand() {
+        expand_type r;
+        std::copy_n(arr.begin(), N, r.arr.begin()+1);
+        return r;
+    }
+    expand_type Expand(key_type key) {
+        expand_type r;
+        std::copy_n(arr.begin(), N, r.arr.begin());
+        r.arr.back() = key;
+        return r;
+    }
     key_type First() {
         return arr.front();
+    }
+    key_type& Last() {
+        return arr.back();
     }
     void Next(key_type key) {
         Shift();
@@ -48,8 +63,21 @@ struct Prefix<0,key_type> {
         return *this;
     }
     
+    Prefix<1> Expand() {
+        return Prefix<1>();
+    }
+    
+    Prefix<1> Expand(key_type key) {
+        Prefix<1> r;
+        r.arr[0] = key;
+        return r;
+    }
+    
     key_type First() {
         return key_type();
+    }
+    key_type Last() {
+        return arr.front();
     }
 };
 
