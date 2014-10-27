@@ -53,7 +53,8 @@ class TopK {
     template <unsigned NP, unsigned NG, typename DUMMY = void> struct GenerateK_s {
         static void func(NGram<NG, key_type>& ngram, Prefix<NP> prefix, self & topk) {
             topk.ngram_size = NG;
-            topk.map = map_type(K);
+            //topk.map = map_type(K);
+            topk.map.clear();
             for (auto k : ngram.TopK<K>(prefix)) {
                 if (k.empty())
                     return;
@@ -92,7 +93,8 @@ public:
     template<unsigned N>
     void Generate(NGram<N, key_type>& ngram) {
         ngram_size = N;
-        map = map_type(ngram.NumberUniqueKeys());
+        //map = map_type(ngram.NumberUniqueKeys());
+        map.clear();
         Prefix<1> prefix;
         for (auto k : ngram.GetKeys()) {
             prefix.Last() = k;
